@@ -52,8 +52,8 @@ caserror:         equ 6017h
 		; door de monitor. De karakters hebben de volgende betekenis: 00 (&HOO) = Geen fout r
 		; 65 (&H41) = "A" Geen cassette
 		; 66 (&H42) = "B" Begin van de band
-		; 67 (&H43) = "c" Leesfout, record gelezen
-		; 68 (&H44) = "D" Controlegetal ("checksurn") fout in startmerk
+		; 67 (&H43) = "C" Leesfout, record gelezen
+		; 68 (&H44) = "D" Controlegetal ("checksum") fout in startmerk
 		; 69 (&H45) = "E" Einde van de band bij schrijven
 		; 70 (&H46) = "F" Einde van de band, maar bestand is geSAVEd
 		; 71 (&H47) = "G" Geen stopje
@@ -141,7 +141,7 @@ validlen:         equ 6066h   ; in blok tape
 desl:             equ 6068h   ; copy descrip
 		; Beginadres van de cassette-header of "file descriptor". Deze
 		; begint meestal op &H6030.
-hdrlen:           equ 606ah   ; lenght of header
+hdrlen:           equ 606ah   ; length of header
 		; Lengte van de cassette-header. Deze is altijd 32 bytes lang
 		; (&H0020).
 endblk:           equ 606ch   ; einde blok
@@ -480,7 +480,7 @@ scrn_type:
       ld       d,000h         ;01c4    16  00
       add      hl,de          ;01c6    19
       ld       (hl),b         ;01c7    70
-      ld       de,l0800h      ;01c8    11  00  08
+      ld       de,0800h       ;01c8    11  00  08
       add      hl,de          ;01cb    19
       ld       (hl),0f5h      ;01cc    36  f5
       pop      de             ;01ce    d1
@@ -922,7 +922,7 @@ CPM_start:
 ; routine schakelt naar bank 0 om
 ; data te lezen vanaf disk en gaat dan
 ; weer terug naar bank 1: terugkomen
-; in DOS system. HL bestemming, Baantal
+; in DOS system. HL bestemming, B aantal
 ; bytes te lezen. C: poort FDC
 inpdisk:
       xor      a              ;0467    af
@@ -1107,7 +1107,6 @@ cassette_exit:
 
 
 lees:
-    ; Something goes wrong here..
       call     blocknr        ;0552    cd  a9  05   ; no i/o
 lees1:
       call     nextparam      ;0555    cd  c6  05   ; no i/o
@@ -1242,7 +1241,7 @@ l0635h:
       ret      nz             ;0641    c0
       ld       e,04ah         ;0642    1e  4a
       ld       h,060h         ;0644    26  60
-      call     sub_0ab0h      ;0646    cd  b0  0a
+      call     wait_157msec      ;0646    cd  b0  0a
       ret      nz             ;0649    c0
       ld       a,(motorstat)  ;064a    3a  50  60
       bit      2,a            ;064d    cb  57
@@ -1278,10 +1277,10 @@ l0666h:
       cp       000h           ;067e    fe  00
       ret      nz             ;0680    c0
 l0681h:
-      call     sub_06f0h      ;0681    cd  f0  06
+      call     write_tape      ;0681    cd  f0  06
       ld       e,04ah         ;0684    1e  4a
       ld       h,061h         ;0686    26  61
-      call     sub_0ab0h      ;0688    cd  b0  0a
+      call     wait_157msec      ;0688    cd  b0  0a
       ld       a,(caserror)   ;068b    3a  17  60
       cp       000h           ;068e    fe  00
       ret      nz             ;0690    c0
@@ -1306,7 +1305,7 @@ l06a7h:
       ret      nz             ;06b9    c0
       ld       a,042h         ;06ba    3e  42
       out      (cas_kbd),a    ;06bc    d3  10
-      call     wait120ms      ;06be    cd  d0  0a
+      call     wait10ms       ;06be    cd  d0  0a
       ld       h,061h         ;06c1    26  61
       jr       retOffMotor    ;06c3    18  93
 sub_06c5h:
@@ -1321,25 +1320,26 @@ l06d2h:
 l06d6h:
       ld       a,04ah         ;06d6    3e  4a
       out      (cas_kbd),a    ;06d8    d3  10
-      call     sub_0ab6h      ;06da    cd  b6  0a
+      call     write_gap      ;06da    cd  b6  0a
       jr       nz,l06d2h      ;06dd    20  f3
-      call     sub_0735h      ;06df    cd  35  07
+      call     write_blk      ;06df    cd  35  07
       call     video_on       ;06e2    cd  96  0b
       ld       a,(caserror)   ;06e5    3a  17  60
       cp       000h           ;06e8    fe  00
       ret      z              ;06ea    c8
       ld       h,060h         ;06eb    26  60
       jp       retOffMotor    ;06ed    c3  58  06
-sub_06f0h:
+
+write_tape:
       ld       a,04ah         ;06f0    3e  4a
       out      (cas_kbd),a    ;06f2    d3  10
       ld       a,(stacas)     ;06f4    3a  60  60
       bit      4,a            ;06f7    cb  67
-      jr       z,l0700h       ;06f9    28  05
-      call     sub_0ae9h      ;06fb    cd  e9  0a
+      jr       z,write_block_start       ;06f9    28  05
+      call     sub_0ae9h      ;06fb    cd  e9  0a ; Beginning of tape gap..
       jr       l0703h         ;06fe    18  03
-l0700h:
-      call     sub_0abbh      ;0700    cd  bb  0a
+write_block_start:
+      call     wait_516msec      ;0700    cd  bb  0a  ; Start of block gap.
 l0703h:
       ret      nz             ;0703    c0
       call     video_off      ;0704    cd  91  0b
@@ -1347,11 +1347,11 @@ l0703h:
       push     hl             ;070b    e5
       push     hl             ;070c    e5
       call     sub_072ah      ;070d    cd  2a  07
-      call     sub_084eh      ;0710    cd  4e  08
-      jr       nz,l0723h      ;0713    20  0e
-      call     sub_0ab6h      ;0715    cd  b6  0a
+      call     write_last_bit ;0710    cd  4e  08
+      jr       nz,l0723h      ;0713    20  0e        ; check err.
+      call     write_gap      ;0715    cd  b6  0a    ; Mark gap..
       jr       nz,l0723h      ;0718    20  09
-      call     sub_0735h      ;071a    cd  35  07
+      call     write_blk      ;071a    cd  35  07
       jr       nz,l0723h      ;071d    20  04
 l071fh:
       call     video_on       ;071f    cd  96  0b
@@ -1360,70 +1360,136 @@ l0723h:
       ld       h,061h         ;0723    26  61
       call     retOffMotor    ;0725    cd  58  06
       jr       l071fh         ;0728    18  f5
+
 sub_072ah:
-      ld       hl,l0001h+2    ;072a    21  03  00
+      ld       hl,0x03        ;072a    21  03  00
       push     hl             ;072d    e5            [ 3 ]
       push     hl             ;072e    e5            [ 3 ]
-      ld       hl,l0813h      ;072f    21  13  08
-      push     hl             ;0732    e5`           [ l0813h ]
-      jr       l0775h         ;0733    18  40
+      ld       hl,get_checksum      ;072f    21  13  08
+      push     hl             ;0732    e5`           [ get_checksum ] <-- what does this do?
+      jr       start_writing         ;0733    18  40
 
 
-sub_0735h:
-;; stack pattern seems to be:
-;; [ value ]
-;; [ value ]
-;; [ continueing func ]
+write_blk:
+;; This function is responsible for writing a block to tape.
+;; Blocks are written using a manchester like encoding, that is
+;; A clock cycle will consist of two pulses i.e.:
+;;
+;; Signals are converted into bits whenever the line signal
+;; changes from low to high and vice versa on a clock signal.
+;;
+;; A transition on a clock boundary from low to high is a 1.
+;; A transition on a clock boundary from high to low is a 0
+;; An intermediate transition halfway between the clock boundary
+;; can occur when there are consecutive 0s or 1s. See the example
+;; below where the clock is marked by a |
+;;
+;;
+;;          1    0    1    1    0    0
+;;   RDA:  _|----|____|--__|----|__--|__--
+;;   RDC:  _|-___|-___|-___|-___|-___|-___
+;;          ^                      ^
+;;          |-- clock signal       |-- intermediate transition.
+;;
+;; The signal is written by sending a signal to WDA & WDA.  Indicating
+;; if the tape should output a high or low value.
+;;
+;; This signal can be written by a simple algorithm where the first bit
+;; is always false (transition to low, half clock).  Now only one bit is needed
+;; to determine what the next partial clock should look like.
+;;
+;;
+;; This works because we are always guaranteed that a block starts with 0xAA, and
+;; hence will ALWAYS find a signal like this on tape: _-- (low, high, high) after
+;; a gap. This is guaranteed when the tape is moving forward as well as backwards.
+;; Writing a byte is roughly:
+;;
+;; write_signal(LOW_SIGNAL);
+;; uint8_t byte = get_next_byte();
+;; for(int i = 0; i < 7; i++) {
+;;   auto bit = (byte >> i) & 0x1;
+;; 	 write_signal(bit ? LOW_SIGNAL  : HIGH_SIGNAL);  // Note signal swapping!
+;; 	 write_signal(bit ? HIGH_SIGNAL : LOW_SIGNAL);
+;;   if (chksum_needed) update_chksum(bit);
+;; }
+;;
+;; The code is clock-cycle perfect to make sure that every 82.3us a bit gets written
+;; to tape. (The MDCR expects a clock cycle to be 167us). Due to this you will find
+;; a series of timing related dummy/jmp instructions.
+;;
+;; When this function is called it will build up a stack that contains the following:
+;;
+;;  | # of bytes to write |  --> Byte Counter with number times to call byte fetch fn
+;;  | start address       |  --> Starting address to fetch data from
+;;  | byte fetch function |  --> Function responsible for loading byte in A
+;;
+;;  The stack is used to determine how bytes are written to tape. First the byte
+;;  0xAA is written to tape, after which the next active function is popped from
+;;  the stack.
+;;
+;; The function will keep writing bytes until either all bytes have been written,
+;; or a cassette error arose
+;;
+;; A checksum will be calculated if C=0 (no carry), the checksum is stored in DE
+;;
+;; Note: If you call this with [hdrlen] = 0, it can be used to write the starting gap marker
+;; (0xAA, 00, 00, 0xAA)
+;; Note: There is a lot of usage of shadow registers to make things confusing.
+setup_function_stacks:
       ld       (spsave),sp    ;0735    ed  73  61     ; store quick exit
-      push     hl             ;0739    e5             ; [??]
-      push     hl             ;073a    e5             ; [??]
-      ld       hl,sub_084eh   ;073b    21  4e  08
-      push     hl             ;073e    e5             ; [sub_084eh]
-      ld       hl,l0001h+2    ;073f    21  03  00
-      push     hl             ;0742    e5             ; [ 3 ]
-      push     hl             ;0743    e5             ; [ 3 ]
-      ld       hl,l0813h      ;0744    21  13  08
-      push     hl             ;0747    e5             ; [ l0813h ]
-      ld       hl,(endblk)    ;0748    2a  6c  60     ; [ endblk ] # Nr of bytes left to write with 0s
+      push     hl             ;0739    e5             ; Add function that writes the last bit and exits.
+      push     hl             ;073a    e5             ; [unused]
+      ld       hl,write_last_bit;073b    21  4e  08   ; [unused]
+      push     hl             ;073e    e5             ; [write_last_bit] <-- closing 0 bit
+      ld       hl,0x03        ;073f    21  03  00
+      push     hl             ;0742    e5             ; Write out the checksum and closing 0xAA marker
+      push     hl             ;0743    e5             ; [ 3            ] <-- checksum (2 byts) + 0xAA
+      ld       hl,get_checksum;0744    21  13  08     ; [ unused       ]
+      push     hl             ;0747    e5             ; [ get_checksum ]
+      ld       hl,(endblk)    ;0748    2a  6c  60     ; Do we need to write 0 bytes?
       ld       a,l            ;074b    7d
       or       h              ;074c    b4
-      jr       z,l0755h       ;074d    28  06         ; if endblock < 256 bytes to write goto l0755h
-      push     hl             ;074f    e5             ; [ endblk ]
-      push     hl             ;0750    e5             ; [ endblk ]
-      ld       hl,l0807h      ;0751    21  07  08     ; [ l0807h ]
+      jr       z,skip_filler  ;074d    28  06         ;  Fill up the remainder with 0s (with checksum)
+      push     hl             ;074f    e5             ; [ endblk       ] <-- # of 0s needed to write
+      push     hl             ;0750    e5             ; [ unused       ]
+      ld       hl,get_0_filler;0751    21  07  08     ; [ get_0_filler ]
       push     hl             ;0754    e5
-l0755h:
-      ld       hl,(validlen)  ;0755    2a  66  60     ; lengh of last block
+skip_filler:
+      ld       hl,(validlen)  ;0755    2a  66  60     ; Do we have any data bytes to write?
       ld       a,l            ;0758    7d
       or       h              ;0759    b4
-      jr       z,l0765h       ;075a    28  09         ; if length of validblock < 256 goto l0765
-      push     hl             ;075c    e5             ; [ validlen ]
-      ld       hl,(oldblk)    ;075d    2a  64  60     ; [ oldblock ]
-      push     hl             ;0760    e5
-      ld       hl,l07fch      ;0761    21  fc  07     ; [ l07fch  ]
+      jr       z,skip_data    ;075a    28  09
+      push     hl             ;075c    e5             ; Write the actual data bytes
+      ld       hl,(oldblk)    ;075d    2a  64  60 	  ; [ validlen     ]  <-- # of bytes
+      push     hl             ;0760    e5    		  ; [ oldblock     ]  <-- Location of data
+      ld       hl,get_byte_wrt;0761    21  fc  07     ; [ get_byte_wrt ]
       push     hl             ;0764    e5
-l0765h:
+skip_data:
       ld       hl,(hdrlen)    ;0765    2a  6a  60
       ld       a,l            ;0768    7d
       or       h              ;0769    b4
-      jr       z,l0775h       ;076a    28  09         ; if hdrlen < 256 got l0755 oh oh?
-      push     hl             ;076c    e5             ; [ hdrlen ]
-      ld       hl,(desl)      ;076d    2a  68  60     ; [ desl   ]
-      push     hl             ;0770    e5
-      ld       hl,l07fch      ;0771    21  fc  07     ; [ l07fch ]
+      jr       z,start_writing;076a    28  09         ; Do we have a header?
+      push     hl             ;076c    e5
+      ld       hl,(desl)      ;076d    2a  68  60     ; [ hdrlen       ]  <-- 32 byte tape header
+      push     hl             ;0770    e5             ; [ desl         ]  <-- header in memory
+      ld       hl,get_byte_wrt;0771    21  fc  07     ; [ get_byte_wrt ]
       push     hl             ;0774    e5
-l0775h:
-      ld       iy,l0795h      ;0775    fd  21  95
+;; The stack with how we are going to write bytes has now been setup.
+
+start_writing:
+;; This sets us up for writing the first marker 0xAA byte, disables and resets checksum calculation.
+      ld       iy,write_bit   ;0775    fd  21  95
       ld       c,000h         ;0779    0e  00
-      sub      a              ;077b    97
-      scf                     ;077c    37
-      ld       b,008h         ;077d    06  08
-      ld       a,0aah         ;077f    3e  aa
+      sub      a              ;077b    97            ; A=0
+      scf                     ;077c    37            ; C=1 (disable checksums)
+      ld       b,008h         ;077d    06  08        ; (8 bits)
+      ld       a,0aah         ;077f    3e  aa        ; (write 0xAA marker)
       exx                     ;0781    d9
-      ld       de,l0000h      ;0782    11  00  00
-l0785h:
-      exx                     ;0785    d9
-      ld       d,a            ;0786    57
+      ld       de,l0000h      ;0782    11  00  00    ; reset checksum
+
+write_byte:
+      exx                     ;0785    d9            ; B has nr of bits, A what to write.
+      ld       d,a            ;0786    57            ; d = byte to write? DE2 = checksum
       ex       af,af'         ;0787    08
       in       a,(cas_inp)    ;0788    db  20        ; read cassette state
       and      030h           ;078a    e6  30        ; bit 4 + 5. CIP/BET
@@ -1431,117 +1497,124 @@ l0785h:
       jp       nz,fast_exit   ;078e    c2  3a  08    ; BET -> !CIP?
       ld       a,000h         ;0791    3e  00
       rr       a              ;0793    cb  1f
-l0795h:
-      ld       a,d            ;0795    7a
-      nop                     ;0796    00
-      and      001h           ;0797    e6  01
-      or       04ah           ;0799    f6  4a
-      ex       (sp),hl        ;079b    e3
-      ex       (sp),hl        ;079c    e3
-      nop                     ;079d    00
-      out      (cas_kbd),a    ;079e    d3  10
-      ex       (sp),hl        ;07a0    e3
-      ex       (sp),hl        ;07a1    e3
-      nop                     ;07a2    00
-      jr       l07a5h         ;07a3    18  00
+write_bit:
+      ld       a,d            ;0795    7a           ; a = byte to write
+      nop                     ;0796    00           ;
+      and      001h           ;0797    e6  01       ; a will now b0
+      or       04ah           ;0799    f6  4a       ; set ready for writing
+      ex       (sp),hl        ;079b    e3           ; dummy
+      ex       (sp),hl        ;079c    e3     	    ; dummy
+      nop                     ;079d    00           ; dummy
+      out      (cas_kbd),a    ;079e    d3  10       ; write bit to tape
+      ex       (sp),hl        ;07a0    e3           ; dummy
+      ex       (sp),hl        ;07a1    e3           ; dummy
+      nop                     ;07a2    00           ; dummy
+      jr       l07a5h         ;07a3    18  00       ; a dummy timing jump.
 l07a5h:
       nop                     ;07a5    00
-      ex       af,af'         ;07a6    08
-      jr       c,l07d8h       ;07a7    38  2f
+      ex       af,af'         ;07a6    08           ; A = byte to write?
+      jr       c,no_chksum    ;07a7    38  2f       ; jump if no checksum
       ex       af,af'         ;07a9    08
       ld       a,d            ;07aa    7a
       exx                     ;07ab    d9
-      and      001h           ;07ac    e6  01
-      xor      e              ;07ae    ab
-      ld       e,a            ;07af    5f
+calc_chksum:
+     ;; This calculates the cheksum
+      and      001h           ;07ac    e6  01   ; DE with checksum is active
+      xor      e              ;07ae    ab       ; a = written bit.
+      ld       e,a            ;07af    5f       ; e = e ^ (bit written)
       and      001h           ;07b0    e6  01
-      jr       z,l07d3h       ;07b2    28  1f
+      jr       z,l07d3h       ;07b2    28  1f   ; through a complex web it will jump to chksum (this is to keep the right timing.)
       ld       a,002h         ;07b4    3e  02
       xor      e              ;07b6    ab
-      ld       e,a            ;07b7    5f
+      ld       e,a            ;07b7    5f       ; e = e ^ 0x02
       ld       a,040h         ;07b8    3e  40
-l07bah:
-      xor      d              ;07ba    aa
-      rra                     ;07bb    1f
-      rr       e              ;07bc    cb  1b
+chksum:
+      xor      d              ;07ba    aa       ; a = d ^ (0x40 | 0x0)
+      rra                     ;07bb    1f       ; >> 1
+      rr       e              ;07bc    cb  1b   ; >> rotate through DE (i.e. e0 -> d7 etc..)
       jr       c,l07c2h       ;07be    38  02
       jr       l07c4h         ;07c0    18  02
 l07c2h:
-      or       080h           ;07c2    f6  80
+      or       080h           ;07c2    f6  80  ;
 l07c4h:
       ld       d,a            ;07c4    57
       exx                     ;07c5    d9
-write_d7:
-      ; This writes out bit 7 from reg D to the tape
-      ; B likely contains # of bytes to be written
-      ; HL contains our continue address
+write_inv_bit:
+      ; This writes the inverted bit to the one that was written
+	  ; a little earlier or on.
       xor      a              ;07c6    af     ; A = 0
       rr       d              ;07c7    cb  1a ; bit 7 goes to carry
       ccf                     ;07c9    3f     ; and gets inverted.
       adc      a,04ah         ;07ca    ce  4a ; and now ends up in bit 0 of A
       out      (cas_kbd),a    ;07cc    d3  10 ; FWD | WCD | KBD and gets written to tape
-      djnz     l07e3h         ;07ce    10  13 ;
-      ld       b,008h         ;07d0    06  08
-      jp       (hl)           ;07d2    e9     ; continue in hl
+      djnz     write_nxt_bit  ;07ce    10  13 ;
+      ld       b,008h         ;07d0    06  08 ; We have written a byte, time to fetch
+      jp       (hl)           ;07d2    e9     ; the next byte and continue.
 l07d3h:
-      jr       nz,l07bah      ;07d3    20  e5
-      jp       l07bah         ;07d5    c3  ba  07
-l07d8h:
+      jr       nz,chksum      ;07d3    20  e5
+      jp       chksum         ;07d5    c3  ba  07
+no_chksum:
       ex       af,af'         ;07d8    08
-      ld       a,(ix+000h)    ;07d9    dd  7e  00
-      ld       a,004h         ;07dc    3e  04
+      ld       a,(ix+000h)    ;07d9    dd  7e  00  ; dummy
+      ld       a,004h         ;07dc    3e  04      ; setup a little timed loop
 l07deh:
       dec      a              ;07de    3d
-      jr       nz,l07deh      ;07df    20  fd
-      jr       write_d7       ;07e1    18  e3
-l07e3h:
+      jr       nz,l07deh      ;07df    20  fd      ; a simple wait thing..
+      jr       write_inv_bit       ;07e1    18  e3      ; write next bit
+write_nxt_bit:
       ex       af,af'         ;07e3    08
-      jp       pe,l081fh      ;07e4    ea  1f  08
-      ld       a,080h         ;07e7    3e  80
+      jp       pe,cnt_writing ;07e4    ea  1f  08 ; continue if BC!=0
+      ld       a,080h         ;07e7    3e  80     ; prepare the next byte fetch function
       dec      a              ;07e9    3d
       ex       af,af'         ;07ea    08
-      pop      hl             ;07eb    e1
-      exx                     ;07ec    d9
+      pop      hl             ;07eb    e1  ; hl now has the next jump funciton
+      exx                     ;07ec    d9  ; swap to shadow regs.
       ld       a,02dh         ;07ed    3e  2d
-      ld       c,l            ;07ef    4d
-      ld       b,l            ;07f0    45
-      ld       c,b            ;07f1    48
-      ld       c,a            ;07f2    4f
-      ld       b,(hl)         ;07f3    46
-      ld       b,l            ;07f4    45
-      ld       d,d            ;07f5    52
+      ld       c,l            ;07ef    4d  ; dummy
+      ld       b,l            ;07f0    45  ; dummy
+      ld       c,b            ;07f1    48  ; dummy
+      ld       c,a            ;07f2    4f  ; dummy
+      ld       b,(hl)         ;07f3    46  ; dummy
+      ld       b,l            ;07f4    45  ; dummy
+      ld       d,d            ;07f5    52  ; dummy
       dec      l              ;07f6    2d
-      pop      hl             ;07f7    e1
-      pop      bc             ;07f8    c1
+      pop      hl             ;07f7    e1  ; Next address
+      pop      bc             ;07f8    c1  ; Next byte counter
       exx                     ;07f9    d9
-      jr       l0795h         ;07fa    18  99
-l07fch:
+      jr       write_bit      ;07fa    18  99
+
+get_byte_wrt:
+; Gets the next byte and sets the checksum flag.
       ex       af,af'         ;07fc    08
       exx                     ;07fd    d9
-      rr       a              ;07fe    cb  1f
-l0800h:
-      or       a              ;0800    b7
-      ld       a,(hl)         ;0801    7e
-      cpi                     ;0802    ed  a1
-      jp       l0785h         ;0804    c3  85  07
-l0807h:
+      rr       a              ;07fe    cb  1f      ; Dummy?
+      or       a              ;0800    b7          Reset Carry, calculate checksum.
+      ld       a,(hl)         ;0801    7e          A = (HL)
+      cpi                     ;0802    ed  a1;     A – (HL), HL = HL +1, BC = BC – 1;
+      jp       write_byte     ;0804    c3  85  07  Note Z=0, S=0, N=1
+
+get_0_filler:
+; Gets a 0 filler byte and sets the checksum flag.
       ex       af,af'         ;0807    08
       exx                     ;0808    d9
       rr       a              ;0809    cb  1f
-      or       a              ;080b    b7
-      ld       a,000h         ;080c    3e  00
-      cpi                     ;080e    ed  a1
-      jp       l0785h         ;0810    c3  85  07
-l0813h:
+      or       a              ;080b    b7           Reset Carry, calculate checksum.
+      ld       a,000h         ;080c    3e  00       A = 0 (write 0)
+      cpi                     ;080e    ed  a1       A – (HL), HL = HL +1, BC = BC – 1; Z=1?
+      jp       write_byte     ;0810    c3  85  07
+
+get_checksum:
+; Gets the checksum and end marker
       ex       af,af'         ;0813    08
-      exx                     ;0814    d9
-      ld       a,e            ;0815    7b
-      ld       e,d            ;0816    5a
+      exx                     ;0814    d9       ; DE has checksum
+      ld       a,e            ;0815    7b       ; this shifts checksum + AA through DE,
+      ld       e,d            ;0816    5a       ; resulting in writing E, D, 0xaa
       ld       d,0aah         ;0817    16  aa
-      scf                     ;0819    37
-      cpi                     ;081a    ed  a1
-      jp       l0785h         ;081c    c3  85  07
-l081fh:
+      scf                     ;0819    37       ; set carry flag (no checksum!)
+      cpi                     ;081a    ed  a1     A – (HL), HL = HL +1, BC = BC – 1;
+      jp       write_byte     ;081c    c3  85  07
+
+cnt_writing:
       ex       af,af'         ;081f    08
       ret      z              ;0820    c8
       or       000h           ;0821    f6  00
@@ -1551,18 +1624,15 @@ l081fh:
       inc      c              ;0828    0c
       di                      ;0829    f3
       dec      c              ;082a    0d
-      ld       iy,l0795h      ;082b    fd  21  95
-      nop                     ;082f    00
-      ld       iy,l0795h      ;0830    fd  21  95
-      ld       a,(iy+000h)    ;0834    fd  7e  00
-      jp       l0795h         ;0837    c3  95  07
+      ld       iy,write_bit   ;082b    fd  21  95  ; Dummy for timing
+      nop                     ;082f    00          ; Dummy for timing
+      ld       iy,write_bit   ;0830    fd  21  95  ; Dummy for timing
+      ld       a,(iy+000h)    ;0834    fd  7e  00  ; Dummy for timing
+      jp       write_bit      ;0837    c3  95  07
+
 fast_exit:
 ; Quick exit to return address.
-; B = 0; D=A; A=garbage; IP=[SP-6]
-; expected on stack:
-;  [some_val]        <-- sp remains here
-;  [some_val]
-;  [return_address]  <-- We continue here.
+
       ld       d,a            ;083a    57
       ld       hl,(spsave)    ;083b    2a  61  60
       dec      hl             ;083e    2b
@@ -1577,11 +1647,15 @@ fast_exit:
       ld       sp,(spsave)    ;0847    ed  7b  61
       ld       b,000h         ;084b    06  00
       jp       (hl)           ;084d    e9
-sub_084eh:
+
+write_last_bit:
+; This writes out the last closing bit, (which will always be the reference signal)
+; and exits the block writing function, updating error settings & clock
+;
       ld       a,04ah         ;084e    3e  4a
-      out      (cas_kbd),a    ;0850    d3  10        ; FWD | WCD | KBD (write a 0 to tape?)
+      out      (cas_kbd),a    ;0850    d3  10        ; FWD | WCD | KBD (write a 0 to tape)
       ld       a,000h         ;0852    3e  00
-      ld       (caserror),a   ;0854    32  17  60
+      ld       (caserror),a   ;0854    32  17  60    ; Success!
       ld       a,b            ;0857    78
       ld       b,000h         ;0858    06  00
       ld       hl,(klok)      ;085a    2a  10  60
@@ -1590,7 +1664,7 @@ sub_084eh:
       cp       008h           ;0861    fe  08
       ret      z              ;0863    c8
       bit      4,d            ;0864    cb  62
-      ld       a,041h         ;0866    3e  41
+      ld       a,'A'          ;0866    3e  41        ; geen cassette
       jr       nz,l086eh      ;0868    20  04
       sub      a              ;086a    97
       inc      a              ;086b    3c
@@ -1609,7 +1683,7 @@ blkread:
       ret                     ;087f    c9
 l0880h:
       call     video_off      ;0880    cd  91  0b  ; let's read the mark
-      call     readmark       ;0883    cd  c2  08  ; (goes wrong in mame)
+      call     readmark       ;0883    cd  c2  08  ;
       ld       hl,(06051h)    ;0886    2a  51  60
       ld       (06053h),hl    ;0889    22  53  60
       ld       a,(caserror)   ;088c    3a  17  60  ; check for error
@@ -1618,9 +1692,9 @@ l0880h:
       call     video_on       ;0893    cd  96  0b
       ret                     ;0896    c9
 blkread_ok:
-      call     sub_0adah      ;0897    cd  da  0a  ; we are looking good so far.
+      call     sub_0adah      ;0897    cd  da  0a  ; we are looking good so far. (does not read)
       jr       nz,l08a4h      ;089a    20  08
-      call     sub_091ch      ;089c    cd  1c  09
+      call     read_data_blk      ;089c    cd  1c  09  ; Reads remaining data
       ld       a,(caserror)   ;089f    3a  17  60
       cp       000h           ;08a2    fe  00
 l08a4h:
@@ -1631,7 +1705,7 @@ l08a4h:
       ret                     ;08ae    c9
 l08afh:
       ld       e,048h         ;08af    1e  48
-      call     sub_0ab0h      ;08b1    cd  b0  0a
+      call     wait_157msec   ;08b1    cd  b0  0a
       call     video_on       ;08b4    cd  96  0b
       ld       a,(motorstat)  ;08b7    3a  50  60
       bit      2,a            ;08ba    cb  57
@@ -1644,7 +1718,7 @@ readmark:
       call     wait_up_o_620ms;08c6    cd  c0  0a
       ret      nz             ;08c9    c0                  ;
 l08cah:
-      call     sub_0906h      ;08ca    cd  06  09
+      call     read_mark      ;08ca    cd  06  09
       ld       de,(endblk)    ;08cd    ed  5b  6c
       call     sub_0a64h      ;08d1    cd  64  0a
       ld       hl,(endblk)    ;08d4    2a  6c  60
@@ -1661,7 +1735,7 @@ l08e7h:
       jr       z,l08cah       ;08e9    28  df
       cp       04ch           ;08eb    fe  4c
       jr       z,l08cah       ;08ed    28  db
-      cp       043h           ;08ef    fe  43
+      cp       043h           ;08ef    fe  43  ; Check for Leesfout?
       jr       z,l08cah       ;08f1    28  d7
       cp       04eh           ;08f3    fe  4e
       jr       nz,l0901h      ;08f5    20  0a
@@ -1674,23 +1748,27 @@ l0901h:
       jp       retOffMotor    ;0903    c3  58  06
 
 
-sub_0906h:
-      ;; magical read things are happening here.
+read_mark:
+      ;; This is likely the block reading routine, which probably follows the same
+	  ;; technique as the write block functions above.
+	  ;; This function is only partially reverse engineered and merely contains
+	  ;; suggestions about what might be happening.
       ld       (spsave),sp    ;0906    ed  73  61           ; used for quick error exit..
-      ld       hl,l0000h      ;090a    21  00  00
-      push     hl             ;090d    e5
-      push     hl             ;090e    e5                   ; 0000 0000 pushed on stack
+      ld       hl,l0000h      ;090a    21  00  00			; | 0x00 |
+      push     hl             ;090d    e5					; | 0x00 |
+      push     hl             ;090e    e5                   ;
       ld       hl,l0a25h      ;090f    21  25  0a           ; function l0a25h 3x on stacl
-      push     hl             ;0912    e5
-      push     hl             ;0913    e5
-      push     hl             ;0914    e5
-      ld       hl,l0a0bh      ;0915    21  0b  0a           ; function l0a0bh on stack
-      push     hl             ;0918    e5                   ; l0a0bh on stack
+      push     hl             ;0912    e5                   ; | l0a25; |
+      push     hl             ;0913    e5					; | l0a25; |
+      push     hl             ;0914    e5					; | l0a25; |
+      ld       hl,aa_mark      ;0915    21  0b  0a          ; function aa_mark on stack
+      push     hl             ;0918    e5                   ; | aa_mark| on stack
       jp       l0953h         ;0919    c3  53  09
 
 
-sub_091ch:
-      ld       hl,sub_0a64h   ;091c    21  64  0a         ; | sub_0a64h |
+read_data_blk:
+	; Reads the data block.
+      ld       hl,sub_0a64h   ;091c    21  64  0a         ; | sub_0a64h |  <-- check error
       push     hl             ;091f    e5
       ld       (spsave),sp    ;0920    ed  73  61         ; Old SP
       ld       hl,l0000h      ;0924    21  00  00
@@ -1705,7 +1783,7 @@ sub_091ch:
       push     hl             ;0934    e5                  ; | validlen  |
       ld       hl,(oldblk)    ;0935    2a  64  60          ; | oldblock  |
       push     hl             ;0938    e5                  ; | 0x0a10    |  <-- Function
-      ld       hl,l0a10h      ;0939    21  10  0a
+      ld       hl,store_read_byte      ;0939    21  10  0a
       push     hl             ;093c    e5
 
 l093dh:
@@ -1718,31 +1796,31 @@ l093dh:
       ld       a,h            ;0940    7c
       or       l              ;0941    b5
       jr       z,l094dh       ;0942    28  09              ; hdrlen == 0?
-      push     hl             ;0944    e5                  ; | hdrlen    |
+      push     hl             ;0944    e5                  ; | hdrlen             |
       ld       hl,(desl)      ;0945    2a  68  60
       push     hl             ;0948    e5
-      ld       hl,l0a10h      ;0949    21  10  0a          ; | desl      |   dest off header
-      push     hl             ;094c    e5                  ; | 0x0a10    | <-- Function
+      ld       hl,store_read_byte      ;0949    21  10  0a ; | desl               |     dest off header
+      push     hl             ;094c    e5                  ; | store_read_byte    | <-- Function
 
 l094dh:
-      push     hl             ;094d    e5                  ; | 0x0a10    |
-      push     hl             ;094e    e5                  ; | 0x0a10    |
-      ld       hl,l0a0bh      ;094f    21  0b  0a          ; | 0x0a0b    |
+      push     hl             ;094d    e5                  ; | store_read_byte    |
+      push     hl             ;094e    e5                  ; | store_read_byte    |
+      ld       hl,aa_mark     ;094f    21  0b  0a          ; | 0x0a0b             |
       push     hl             ;0952    e5
 l0953h:
       ld       a,040h         ;0953    3e  40              ; enable kbk
       out      (cas_kbd),a    ;0955    d3  10
       ld       a,048h         ;0957    3e  48              ; key + fwd
       out      (cas_kbd),a    ;0959    d3  10
-      call     wait_300_us    ;095b    cd  78  0b          ; A = state(rdc) | BET
+      call     wait_250_us    ;095b    cd  78  0b          ; A = state(rdc) | BET
       xor      040h           ;095e    ee  40              ; flip rdc bit
       ld       h,a            ;0960    67                  ; H = A
-      ld       iy,l096ah      ;0961    fd  21  6a          ; IY = 0x096a
+      ld       iy,first_mdcr_signal      ;0961    fd  21  6a          ; IY = 0x096a
       ld       c,000h         ;0965    0e  00              ; C = 0
-      ld       de,04ce5h      ;0967    11  e5  4c          ; DE = 0x4ce5
+      ld       de,04ce5h      ;0967    11  e5  4c          ; DE = 0x4ce5 seems timing related..
 
-l096ah:
-;; It looks this waits for the first bit from the cassette port?
+first_mdcr_signal:
+;; It looks this waits for the first bit from the cassette port.
 ;;
 ;; Vars:
 ;;     H  = state(RDC) | state(BET)
@@ -1751,10 +1829,10 @@ l096ah:
       in       a,(cas_inp)    ;096a    db  20
       and      070h           ;096c    e6  70 ; mask for bit 4,5,6 (rd clock, cip, bet)
       cp       h              ;096e    bc     ; H = state(RDC) | BET
-      jr       z,l099bh       ;096f    28  2a ; if (A == H) goto 0x099b  (Bit available for read?)
+      jr       z,start_bytes  ;096f    28  2a ; if (A == H) goto 0x099b  (Bit available for read?)
       and      030h           ;0971    e6  30 ; A = BET | CIP            (Does BET->CIP?)
       cp       020h           ;0973    fe  20 ; A -= BET
-      jr       nz,l098ah      ;0975    20  13 ; if (A == CIP) goto 098a (exit_cas)
+      jr       nz,mdcr_signal_err    ;0975    20  13 ; if (A == CIP) goto 098a (exit_cas)
       dec      de             ;0977    1b     ; DE--
       ld       a,d            ;0978    7a     ; A = F
       or       e              ;0979    b3     ; D || E (set Z if D==0 && E==0)
@@ -1765,10 +1843,10 @@ l096ah:
       dec      c              ;097f    0d
       ld       a,048h         ;0980    3e  48 ; tape fwd keybd on.
       out      (cas_kbd),a    ;0982    d3  10
-      ld       iy,l096ah      ;0984    fd  21  6a
+      ld       iy,first_mdcr_signal      ;0984    fd  21  6a
       jp       (iy)           ;0988    fd  e9 ;
 
-l098ah:
+mdcr_signal_err:
       jp       exit_cas       ;098a    c3  39  0a
 no_prog:
       ld       a,"N"          ;098d    3e  4e      ; no program found
@@ -1778,22 +1856,23 @@ no_prog:
       ld       b,008h         ;0998    06  08      ; B = 0x08
       ret                     ;099a    c9
 
-l099bh:
-    ; Prep for read byte?
+start_bytes:
+    ; Prep for read byte?  Looks like this gets called when we find the first
+    ; bit on our mdcr (de = 0x2F86 on first call?)
     ; It looks like we use the shadow registers to collect bits
     ; E' contains the number of bits
     ; A' contains the byte we are reading
 
       ld       (06051h),de    ;099b    ed  53  51   ; Store counter.
-      ld       iy,next_bit    ;099f    fd  21  ae   ; IY = 0x09ae next RDC statte
-      exx     	            ;09a3    d9           ; Setup shadow registers.
+      ld       iy,next_bit    ;099f    fd  21  ae   ; IY = 0x09ae
+      exx     	              ;09a3    d9           ; Setup shadow registers.
       ld       e,007h         ;09a4    1e  07
-      exx    				  ;09a6    d9   ; E' = 0x07
+      exx    		          ;09a6    d9           ; E' = 0x07
       ex       af,af'         ;09a7    08           ; A' active
       sub      a              ;09a8    97           ; A' = 0
-      scf     		      ;09a9    37           ; FC = 1
+      scf     		          ;09a9    37           ; FC = 1       AF = 0x0041 (Z + C)
       ld       de,l0000h      ;09aa    11  00  00   ; DE = 0
-l09adh:
+next_bit_af_flp:
       ex       af,af'         ;09ad    08           ; Activate our tempory  AF
 
 next_bit:
@@ -1806,21 +1885,21 @@ next_bit:
 
 wait_for_bit:
       ; At this point h contains the RDC state we exepect at the cassette port
-      ; b = 0; so we loop at most 255 times.
-      in       a,(cas_inp)    ;09b4    db  20 ; bit read?
-      ld       l,a            ;09b6    6f     ; L = A  (i.e. last read)
-      and      070h           ;09b7    e6  70 ; mask 6,5,4 (RDC, BET, CIP)
-      cp       h              ;09b9    bc
-      jr       z,read_bit     ;09ba    28  04 ; bit has arrived.
-      djnz     wait_for_bit   ;09bc    10  f6 ; keep trying until we receive the expected state
+      ; b = 0; so we loop at most 255 times. (4692 usec 4,6 ms)
+      in       a,(cas_inp)    ;09b4    db  20 ; bit read?                                          2.75  <-- Execution single instruction 4mhz z80  (P2000 = 2.5mhz)
+      ld       l,a            ;09b6    6f     ; L = A  (i.e. last read)                         E.T 1                         |
+      and      070h           ;09b7    e6  70 ; mask 6,5,4 (RDC, BET, CIP)                          1.75                      | (this loop is 18.4 usec on P2000t)
+      cp       h              ;09b9    bc                                                           1                         |
+      jr       z,read_bit     ;09ba    28  04 ; bit has arrived.                                F:  1.75  T: 3.00             |
+      djnz     wait_for_bit   ;09bc    10  f6 ; keep trying until we receive the expected state F:  3.25  T: 2 (11.5) --------
       jr       exit_cas       ;09be    18  79
 
 read_bit:
       ;; This is called when a bit has arrived
       ;; L contains the last read from the cassette port, and should have the bit
-      ;; interest
-      ex       af,af'         ;09c0    08       ; A = A' bring in real A..
-      jr       c,l09e9h       ;09c1    38  26
+      ;; of interest
+      ex       af,af'         ;09c0    08       ; A = A' bring in real A..                      1
+      jr       c,l09e9h       ;09c1    38  26   ;
       ex       af,af'         ;09c3    08       ;
       xor      a              ;09c4    af       ; A = 0
       rlc      l              ;09c5    cb  05   ; shift bit 8 into C (read bit from port)
@@ -1828,41 +1907,41 @@ read_bit:
       xor      e              ;09c8    ab       ; E = 0
       ld       e,a            ;09c9    5f       ; e <- (1/0)
       and      001h           ;09ca    e6  01
-      jr       z,l09d4h       ;09cc    28  06   ; IF (A == 0) 0x9d4 (i.e. not bit read from tape)
+      jr       z,l09d4h       ;09cc    28  06   ; IF (A == 0) 0x9d4 (i.e. 0 bit read from tape)
       ld       a,002h         ;09ce    3e  02   ; E = 1
       xor      e              ;09d0    ab       ; A = 2
       ld       e,a            ;09d1    5f       ; E = 2
       ld       a,040h         ;09d2    3e  40   ; A = 40
 l09d4h:
-      xor      d              ;09d4    aa        ; (A = 0x40 or 0x00)
-      rra      		      ;09d5    1f        ; A = A / 2
-      rr       e              ;09d6    cb  1b    ; E has 1 if we read 1, or 0 otherwise
+      xor      d              ;09d4    aa        ; D = 0,
+      rra      		          ;09d5    1f        ; A = A / 2 (A = 0 | A =  0x20)
+      rr       e              ;09d6    cb  1b    ; E now has the bit from tape
       jr       nc,l09dch      ;09d8    30  02  0 ;
       or       080h           ;09da    f6  80
 l09dch:
-      ld       d,a            ;09dc    57
+      ld       d,a            ;09dc    57        ; D = 1000 | 1001 | 0 | 1
 l09ddh:
       rrc      l              ;09dd    cb  0d
       exx                     ;09df    d9       ; Flip in shadow regs.
-      rr       d              ;09e0    cb  1a
+      rr       d              ;09e0    cb  1a   ; /2?
       dec      e              ;09e2    1d       ; bit counter?
-      jr       nz,l09ech      ;09e3    20  07
+      jr       nz,l09ech      ;09e3    20  07   ; get next byte handle function.
       ld       e,008h         ;09e5    1e  08
-      jp       (ix)           ;09e7    dd  e9   ; byte read?
+      jp       (ix)           ;09e7    dd  e9   ; we read a byte. [0a0b, 0a25, 0a10]
 l09e9h:
-      ex       af,af'         ;09e9    08
+      ex       af,af'         ;09e9    08       ; Called on bit 0,1, activates the shadow AF
       jr       l09ddh         ;09ea    18  f1
-l09ech:
+l09ech:                                         ; Did not yet read whole byte.
       ex       af,af'         ;09ec    08
-      jp       pe,l09fbh      ;09ed    ea  fb  09
+      jp       pe,l09fbh      ;09ed    ea  fb  09 ; Jump parity even
       ld       b,080h         ;09f0    06  80
       dec      b              ;09f2    05
       ex       af,af'         ;09f3    08       ; F' = (Z=0, P=0, H=1, V=0, N=1, S=0 )
-      pop      ix             ;09f4    dd  e1   ; continuation function
-      pop      hl             ;09f6    e1       ;
-      pop      bc             ;09f7    c1       ;
+      pop      ix             ;09f4    dd  e1   ; Byte handle function.
+      pop      hl             ;09f6    e1       ; Destination address.
+      pop      bc             ;09f7    c1       ; Number of bytes.
       exx                     ;09f8    d9
-      jr       next_bit       ;09f9    18  b3
+      jr       next_bit       ;09f9    18  b3   ; It takes 82.8 usec to read a single bit.
 l09fbh:
       ex       af,af'         ;09fb    08
       exx                     ;09fc    d9
@@ -1870,16 +1949,16 @@ l09fbh:
       inc      c              ;09fe    0c
       di                      ;09ff    f3
       dec      c              ;0a00    0d
-      ld       a,048h         ;0a01    3e  48
+      ld       a,048h         ;0a01    3e  48  ; write to unused ports? must be dummy..
       out      (cas_kbd),a    ;0a03    d3  10
       ld       iy,next_bit    ;0a05    fd  21  ae
-      jp       (iy)           ;0a09    fd  e9
-l0a0bh:
-      ex       af,af'         ;0a0b    08
+      jp       (iy)           ;0a09    fd  e9  ; It takes 82.4 usec to take this path.
+aa_mark:
+      ex       af,af'         ;0a0b    08      ; Called after 1st byte was read 0xAA marker?
       exx                     ;0a0c    d9
-      sub      a              ;0a0d    97
-      jr       l09adh         ;0a0e    18  9d
-l0a10h:
+      sub      a              ;0a0d    97       ; This resets the carry flag.
+      jr       next_bit_af_flp  ;0a0e    18  9d  ; This path takes 66.4 usec., swap AF' in and next bit
+store_read_byte:
       exx                     ;0a10    d9
       ld       a,d            ;0a11    7a
       or       e              ;0a12    b3
@@ -1893,21 +1972,21 @@ l0a1ah:
       rla                     ;0a1c    17
       or       a              ;0a1d    b7
 l0a1eh:
-      exx                     ;0a1e    d9
-      ld       (hl),d         ;0a1f    72
-      cpi                     ;0a20    ed  a1
+      exx                     ;0a1e    d9        ; D has the byte that was read.
+      ld       (hl),d         ;0a1f    72        ; store in memory.
+      cpi                     ;0a20    ed  a1    ; HL+1, BC-1, A-=[HL] BC has number of bytes in block
       exx                     ;0a22    d9
-      jr       l09adh         ;0a23    18  88
+      jr       next_bit_af_flp         ;0a23    18  88
 l0a25h:
-      inc      bc             ;0a25    03
-      exx     		      ;0a26    d9
-      ld       a,d            ;0a27    7a
-      or       e              ;0a28    b3
+      inc      bc             ;0a25    03        ; # bytes read?
+      exx     		          ;0a26    d9
+      ld       a,d            ;0a27    7a        ; Byte read in a.
+      or       e              ;0a28    b3        ; Check if byte is non zero (we read 0xaa)
       jr       nz,l0a2fh      ;0a29    20  04
       ex       af,af'         ;0a2b    08
       xor      a              ;0a2c    af
       jr       l0a33h         ;0a2d    18  04
-l0a2fh:
+l0a2fh:                                          ; <- after we read the marker? (ie. AA 00 00 AA)
       ex       af,af'         ;0a2f    08
       scf                     ;0a30    37
       rla                     ;0a31    17
@@ -1915,7 +1994,7 @@ l0a2fh:
 l0a33h:
       ld       b,080h         ;0a33    06  80
       dec      b              ;0a35    05
-      jp       l09adh         ;0a36    c3  ad  09
+      jp       next_bit_af_flp         ;0a36    c3  ad  09
 exit_cas:
 ; This is some kind of tape exit routine
 ; which will set there error to 0.
@@ -1946,18 +2025,19 @@ l0a3bh:
       ret                     ;0a63    c9
 
 
+; L != 0 error.
 sub_0a64h:
       ld       h,a            ;0a64    67
       ld       a,b            ;0a65    78
       cp       008h           ;0a66    fe  08
       jr       z,l0a98h       ;0a68    28  2e
       bit      4,h            ;0a6a    cb  64
-      ld       a,041h         ;0a6c    3e  41
+      ld       a,"A"          ;0a6c    3e  41  ; Geen cassette?
       jr       nz,l0a87h      ;0a6e    20  17
       bit      5,h            ;0a70    cb  6c
-      ld       a,045h         ;0a72    3e  45
+      ld       a,"E"          ;0a72    3e  45 ; End of tape, writing
       jr       z,l0a87h       ;0a74    28  11
-      ld       a,04ch         ;0a76    3e  4c
+      ld       a,"L"          ;0a76    3e  4c ; End of tape, reading.
       inc      l              ;0a78    2c
       dec      l              ;0a79    2d
       jr       nz,l0a87h      ;0a7a    20  0b
@@ -1993,45 +2073,46 @@ l0a98h:
       ld       (endblk),bc    ;0aa9    ed  43  6c
       exx                     ;0aad    d9
       jr       l0a8ah         ;0aae    18  da
-sub_0ab0h:
+wait_157msec:
+; Length of start gap.
       push     bc             ;0ab0    c5
       ld       c,032h         ;0ab1    0e  32
       jp       l0b3ch         ;0ab3    c3  3c  0b
-sub_0ab6h:
+write_gap:
       push     bc             ;0ab6    c5
       ld       c,01bh         ;0ab7    0e  1b
       jr       delay          ;0ab9    18  3a
-sub_0abbh:
+wait_516msec:
       push     bc             ;0abb    c5
       ld       c,0a4h         ;0abc    0e  a4
       jr       delay          ;0abe    18  35
 wait_up_o_620ms:
       ld       a,(stacas)     ;0ac0    3a  60  60
       bit      4,a            ;0ac3    cb  67   ; BOT error?
-      jr       z,wait120ms    ;0ac5    28  09   ; if no goto wait
+      jr       z,wait10ms    ;0ac5    28  09   ; if no goto wait
       res      4,a            ;0ac7    cb  a7   ; reset BOT, and wait
       ld       (stacas),a     ;0ac9    32  60  60
       call     wait_500ms     ;0acc    cd  f2  0a
       ret      nz             ;0acf    c0
-wait120ms:
-      push     bc             ;0ad0    c5
+wait10ms:
+      push     bc             ;0ad0    c5    ; wait 10.86ms
       ld       c,026h         ;0ad1    0e  26
       jr       delay          ;0ad3    18  20
 sub_0ad5h:
       push     bc             ;0ad5    c5
-      ld       c,026h         ;0ad6    0e  26
+      ld       c,026h         ;0ad6    0e  26 ; wait 7280 us
       jr       l0b3ch         ;0ad8    18  62
 sub_0adah:
       push     bc             ;0ada    c5
-      ld       c,016h         ;0adb    0e  16
+      ld       c,016h         ;0adb    0e  16 ; wait 4480 us
       jr       delay          ;0add    18  16
 sub_0adfh:
       push     bc             ;0adf    c5
-      ld       c,020h         ;0ae0    0e  20
+      ld       c,020h         ;0ae0    0e  20 ; Wait 9152 us, 9ms
       jr       l0b3ch         ;0ae2    18  58
 sub_0ae4h:
       push     bc             ;0ae4    c5
-      ld       c,053h         ;0ae5    0e  53
+      ld       c,053h         ;0ae5    0e  53 ; Wait 23771us, 23ms.
       jr       delay          ;0ae7    18  0c
 sub_0ae9h:
       res      4,a            ;0ae9    cb  a7
@@ -2043,18 +2124,22 @@ wait_500ms:
       push     bc             ;0af2    c5
       ld       c,09fh         ;0af3    0e  9f ; 500 ms
 delay:
+;  Delay a bit, while detecting end of tape, or tape removal
+;  Args:
+;       C: =  We will for +/- C * 286.4 us  delay
+;
 ; bc should be on stack already
-      ld       b,0afh         ;0af5    06  af
+      ld       b,0afh         ;0af5    06  af ; from 0aff takes 280us
 delay1:
-      in       a,(cas_inp)    ;0af7    db  20
-      and      030h           ;0af9    e6  30  ; A = BET | CIP   (Does BET->CIP?)
-      cp       020h           ;0afb    fe  20  ; A -= BET
-      jr       nz,handle_err  ;0afd    20  07  ; if (A == CIP) goto 098a (handle_err)
-      djnz     delay1         ;0aff    10  f6
-      dec      c              ;0b01    0d
-      jr       nz,delay       ;0b02    20  f1
-      pop      bc             ;0b04    c1
-      ret                     ;0b05    c9
+      in       a,(cas_inp)    ;0af7    db  20  ;ET: 3.0
+      and      030h           ;0af9    e6  30  ;ET: 1.0  A = BET | CIP   (Does BET->CIP?)
+      cp       020h           ;0afb    fe  20  ;ET: 1.0  A -= BET
+      jr       nz,handle_err  ;0afd    20  07  ;ET: 3.00 / 1.75 if (A == CIP) goto 098a (handle_err)
+      djnz     delay1         ;0aff    10  f6  ;ET: 3.25 / 2.00  (One loop = 16us)
+      dec      c              ;0b01    0d      ;ET: 1.00
+      jr       nz,delay       ;0b02    20  f1  ;ET: 3.00 / 1.75
+      pop      bc             ;0b04    c1      ;ET: 2.50
+      ret                     ;0b05    c9      ;
 handle_err:
       or       a              ;0b06    b7
       ld       a,"A"          ;0b07    3e  41  ; No cassette
@@ -2132,16 +2217,16 @@ l0b74h:
       ret
 
 	                   ;0b77    c9
-wait_300_us:
+wait_250_us:
 ; waits a bit and sets the current RDC state + bit 5 (BET) in A
 ; so A = 0101 0000 or 0001 0000
       ld       b,02eh         ;0b78    06  2e  ; for(B = 0x2e; B > 0; B--);
 l0b7ah:
-      djnz     l0b7ah         ;0b7a    10  fe
-      in       a,(cas_inp)    ;0b7c    db  20
-      and      040h           ;0b7e    e6  40
-      set      5,a            ;0b80    cb  ef  ; a = RDC | bit5 (BET)
-      ret                     ;0b82    c9
+      djnz     l0b7ah         ;0b7a    10  fe  ; ET= 3.25  (5.2 usec * ) (239.2 us)
+      in       a,(cas_inp)    ;0b7c    db  20  ; ET= 2.75
+      and      040h           ;0b7e    e6  40  ; ET= 1.75
+      set      5,a            ;0b80    cb  ef  ; ET= 2   a = RDC | bit5 (BET)
+      ret                     ;0b82    c9      ; ET= 2.5   Total 249.7
 
 castest:
       in       a,(cas_inp)    ;0b83    db  20
@@ -2210,11 +2295,11 @@ l0bdfh:
 EOT:
       call     castest        ;0be4    cd  83  0b
       ret      nz             ;0be7    c0
-      ld       a,04ah         ;0be8    3e  4a  // FWD WRITE
+      ld       a,04ah         ;0be8    3e  4a  ;; FWD WRITE
       out      (cas_kbd),a    ;0bea    d3  10
       ld       b,00fh         ;0bec    06  0f
 l0beeh:
-      call     wait120ms      ;0bee    cd  d0  0a
+      call     wait10ms      ;0bee    cd  d0  0a
       jr       nz,l0c03h      ;0bf1    20  10
       djnz     l0beeh         ;0bf3    10  f9
       ld       a,000h         ;0bf5    3e  00
@@ -2226,7 +2311,7 @@ l0beeh:
 l0c03h:
       ld       a,042h         ;0c03    3e  42
       out      (cas_kbd),a    ;0c05    d3  10
-      call     wait120ms      ;0c07    cd  d0  0a
+      call     wait10ms      ;0c07    cd  d0  0a
       ld       h,068h         ;0c0a    26  68
       jp       retOffMotor    ;0c0c    c3  58  06
       call     sub_0b9ah      ;0c0f    cd  9a  0b
@@ -2245,7 +2330,7 @@ sub_0c13h:
       call     get_rda        ;0c24    cd  ee  0c
       ld       d,0eah         ;0c27    16  ea
 l0c29h:
-      call     read_rr1       ;0c29    cd  bf  0c
+      call     read_rev_byte       ;0c29    cd  bf  0c
       jr       c,sub_0c13h_ret;0c2c    38  23
       jr       nz,l0c3ah      ;0c2e    20  0a
       ld       d,023h         ;0c30    16  23
@@ -2263,9 +2348,9 @@ l0c3ah:
       res      5,(hl)         ;0c48    cb  ae
       ret                     ;0c4a    c9
 l0c4bh:
-      ld       hl,telblok     ;0c4b    21  6e  60  // telblock--
+      ld       hl,telblok     ;0c4b    21  6e  60  ;; telblock--
       dec      (hl)           ;0c4e    35  5
-      jr       nz,sub_0c13h   ;0c4f    20  c2      // if telblock > 0
+      jr       nz,sub_0c13h   ;0c4f    20  c2      ;; if telblock > 0
 sub_0c13h_ret:
       ld       h,066h         ;0c51    26  66
       jp       retOffMotor    ;0c53    c3  58  06
@@ -2273,24 +2358,28 @@ no_start_marker:
       ld       hl,stacas      ;0c56    21  60  60
       set      0,(hl)         ;0c59    cb  c6     ; geen startmerk..
       jr       sub_0c13h_ret  ;0c5b    18  f4
+
+
 sub_0c5dh:
       ld       l,001h         ;0c5d    2e  01
       jr       l0c6ch         ;0c5f    18  0b
-      call     sub_0b9ah      ;0c61    cd  9a  0b
+
+move_back_block:
+      call     sub_0b9ah      ;0c61    cd  9a  0b ; Entry point move block back
       ret      nz             ;0c64    c0
       ld       hl,stacas      ;0c65    21  60  60
       res      0,(hl)         ;0c68    cb  86
       ld       l,000h         ;0c6a    2e  00
 l0c6ch:
-      ld       a,044h         ;0c6c    3e  44
+      ld       a,044h         ;0c6c    3e  44     ; Set tape to move back
       out      (cas_kbd),a    ;0c6e    d3  10
-      call     get_rda      ;0c70    cd  ee  0c
+      call     get_rda        ;0c70    cd  ee  0c ; Get the state of the clock.
 l0c73h:
-      ld       e,0e1h         ;0c73    1e  e1
+      ld       e,0e1h         ;0c73    1e  e1     ; e1? (225?)
       ld       d,001h         ;0c75    16  01
 l0c77h:
-      call     read_rr1      ;0c77    cd  bf  0c
-      jr       c,l0ca2h       ;0c7a    38  26
+      call     read_rev_byte      ;0c77    cd  bf  0c  ; Move back one byte.
+      jr       c,move_back_err     ;0c7a    38  26     ; Carry bit means we saw an error
       jr       nz,l0c73h      ;0c7c    20  f5
       dec      e              ;0c7e    1d
       jr       nz,l0c77h      ;0c7f    20  f6
@@ -2298,8 +2387,8 @@ l0c77h:
       jr       nz,l0cb8h      ;0c83    20  33
 l0c85h:
       ld       d,027h         ;0c85    16  27
-      call     read_rr1      ;0c87    cd  bf  0c
-      jr       c,l0ca2h       ;0c8a    38  16
+      call     read_rev_byte  ;0c87    cd  bf  0c
+      jr       c,move_back_err       ;0c8a    38  16     ; Carry bit means error
       jr       z,l0c85h       ;0c8c    28  f7
       ld       h,064h         ;0c8e    26  64
       ld       e,044h         ;0c90    1e  44
@@ -2311,14 +2400,14 @@ l0c85h:
 l0c9dh:
       ld       a,000h         ;0c9d    3e  00
       ld       (caserror),a   ;0c9f    32  17  60 ; Reset error
-l0ca2h:
-      ld       h,065h         ;0ca2    26  65
-      call     retOffMotor    ;0ca4    cd  58  06
+move_back_err:
+      ld       h,065h         ;0ca2    26  65     ;
+      call     retOffMotor    ;0ca4    cd  58  06 ; Stop the motor and continue..
 l0ca7h:
-      ld       a,(caserror)   ;0ca7    3a  17  60
-      cp       045h           ;0caa    fe  45
-      ret      nz             ;0cac    c0
-      ld       a,"B"          ;0cad    3e  42     ; Start of tape
+      ld       a,(caserror)   ;0ca7    3a  17  60 ; Set error to "B" and set bit 4 in stacas if we saw BET signal
+      cp       045h           ;0caa    fe  45     ;
+      ret      nz             ;0cac    c0         ;
+      ld       a,"B"          ;0cad    3e  42     ; Start of tape, bad news we went back too far?
       ld       (caserror),a   ;0caf    32  17  60
       ld       hl,stacas      ;0cb2    21  60  60
       set      4,(hl)         ;0cb5    cb  e6
@@ -2329,47 +2418,62 @@ l0cb8h:
       jr       l0c9dh         ;0cbd    18  de
 
 
-; params A
-read_rr1:
-      ld       c,008h         ;0cbf    0e  08 ; wait for 8 rda flips?
-l0cc1h:
-      xor      080h           ;0cc1    ee  80
+      ;; This seems to read a byte when the tape is moving backwards.
+      ;; Note that RDA <-> RDC when moving backwards.
+      ;;
+      ;; Args:
+      ;;   A must contain the current state of RDC & BET
+      ;;   D related to time we are willing to wait to see a byte.
+      ;;
+      ;; Returns:
+      ;;   Sets the C flag in case of failure (beginning of tape, or tape removed.)
+      ;;   Sets (caserror) with the actual error in case C is set
+read_rev_byte:
+      ld       c,008h         ;0cbf    0e  08        ; wait for at most 8 bits
+rev_next_bit:
+      xor      080h           ;0cc1    ee  80        ; Flip the expected RDA, we wait for next clock
       ld       h,a            ;0cc3    67
 l0cc4h:
-      ld       b,000h         ;0cc4    06  00
-l0cc6h:
-      in       a,(cas_inp)    ;0cc6    db  20
-      and      0b0h           ;0cc8    e6  b0  ; RDA, BET, CIP
-      cp       h              ;0cca    bc
-      jr       z,l0cddh       ;0ccb    28  10
-      djnz     l0cc6h         ;0ccd    10  f7
-      and      030h           ;0ccf    e6  30   ; mask bet & cip
-      cp       020h           ;0cd1    fe  20   ; nz if
-      jr       nz,rr1_err     ;0cd3    20  0d
+      ld       b,000h         ;0cc4    06  00        ; Max time we are willing to wait for RDA clock signal, we loop 256 times
+wait_for_rev_bit:
+      ; Keep spinning until we have a bit flip
+      in       a,(cas_inp)    ;0cc6    db  20        ;
+      and      0b0h           ;0cc8    e6  b0        ; RDA, BET, CIP
+      cp       h              ;0cca    bc            ; Is the clock state as expected?
+      jr       z,rev_bit_available  ;0ccb    28  10
+      djnz     wait_for_rev_bit     ;0ccd    10  f7  ; Spin until RDA changes.
+      and      030h           ;0ccf    e6  30        ; mask bet & cip
+      cp       020h           ;0cd1    fe  20        ; this checks for errors.
+      jr       nz,read_rev_err     ;0cd3    20  0d   ; Check if we are at the end, or cassette removed.
       dec      d              ;0cd5    15
       jr       nz,l0cc4h      ;0cd6    20  ec
       ld       a,h            ;0cd8    7c
       xor      080h           ;0cd9    ee  80
       inc      d              ;0cdb    14
       ret                     ;0cdc    c9
-l0cddh:
+rev_bit_available:
+      ;; This is called when we have a bit available..
       ld       a,h            ;0cdd    7c
       dec      c              ;0cde    0d
-      jr       nz,l0cc1h      ;0cdf    20  e0
-      ret                     ;0ce1    c9
-rr1_err:
+      jr       nz,rev_next_bit      ;0cdf    20  e0
+      ret                     ;0ce1    c9  ; We have read 8 bits..
+
+read_rev_err:
+      ;; This happens when we hit the beginning of the tape, or if we
+      ;; removed the tape while moving backwards.
       or       a              ;0ce2    b7
       ld       a,"E"          ;0ce3    3e  45   ; End of tape error
       jr       z,l0ce9h       ;0ce5    28  02
       ld       a,"A"          ;0ce7    3e  41   ; No tape
 l0ce9h:
       ld       (caserror),a   ;0ce9    32  17  60
-      scf                     ;0cec    37
+      scf                     ;0cec    37       ; Set the carry flag to indicate failure.
       ret                     ;0ced    c9
 
 
 ;; Read the RDA state and set bit 5 in A
 ;; RDA_state | BET
+;; Note when the tape is moving in reverse this actually gets the RDC bit.
 get_rda:
       in       a,(cas_inp)    ;0cee    db  20
       and      080h           ;0cf0    e6  80
