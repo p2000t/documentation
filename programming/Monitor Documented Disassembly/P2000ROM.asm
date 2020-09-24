@@ -1,0 +1,5 @@
+include 'Symbols.asm'
+include 'Startup.asm'
+include 'Cassette.asm'
+include 'Printer.asm'
+include 'Disk.asm'
