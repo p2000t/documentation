@@ -1053,7 +1053,7 @@ _errnotfound:
 ; DE =  wait count. Block is always read in 2 sections. The Marker and the DataBlock
 ;       the total wait time for the 1st bits of these sections may not exceed 1 second.
 ;       therefore the remaining counter value is saved for the next section's read operation
-; the first bit of the preamble is per definition a zero.
+; the first bit of the preamble is per definition a one (least significant bit first).
 ; from now on we can process all bits in one big stream.
 first_bit_received:
         ld (cass_loops_rem_block),de    ; save the remaining # 0f waits (this is how long the wait for the next first bit may take) 
