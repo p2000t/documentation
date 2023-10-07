@@ -1,3 +1,3 @@
-# P2000T documentation preservation
+# P2000T Documentation Preservation
 
-Preservation of Philips' P2000T home computer documentation.
+Preservation of documentation for the Philips P2000T home computer.
