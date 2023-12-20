@@ -1,0 +1,587 @@
+INTRODUCTION
+With the introduction of the P2000C Portable Computer it is now possible to
+have a complete computer system in one easily movable package; including the
+keyboard, a monitor and two floppy disk drives.
+With the possibility to operate in either 8 or l6 bit modes the P2000C combines
+the latest in computer design techniques. Flexibility in hardware and software
+configuration and the availability of extensive system reference documentation
+have produced a fully open architecture.
+The P2000C is intended for business professionals of large and small companies,
+for small businesses, science and industry and for the dedicated home computer
+enthusiast.
+The main operating system is CP/M* version 2.2 supplied with specially designed
+Philips utilities for disk handling (format, copy) hard disk backup and system
+configuration.
+An alternative operating system, p-System**, supporting the UCSD PASCAL and
+FORTRAN-77 programming languages, is also available.
+For 16 bit operation the MS-DOS# version 2.ll operating system is used with the
+8088 CO-POWER Board.
+This is supplied with a range of MS-DOS oriented utilities.
+A configuration program, part of the system software, allows users to design
+their own disk, keyboard, video and printer tables and to integrate any combin-
+ation of these tables into specific configurations. From the complete internal
+character set, a set that suits the user's particular needs can easily be
+configured at any time.
+
+*) Trademark of Digital Research Inc.
+**) Trademark of Softech Microsystems
+#) Trademark of Microsoft Corp.
+
+-2-
+
+SYSTEM CHARACTERISTICS
+Main Features
+The main features of the P2000C range of 'compact' computers are:
+- 8 or 16 bit operation
+- limited IBM PC compatibility with 8088 C0-POWER Board fitted
+- compact design
+- portability
+- dual processor Z80A 4 MHz, 64 KB CPU RAM
+  32 KB VIDEO RAM
+- built in 9" monochrome (green) CRT antiglare
+- 320 or 1280 KB mass storage (two built in 5 1/4" floppy disks)
+- choice of operating systems
+- 1 free slot for:
+  . 8088 C0-POWER board (16 bit operation or CP/M RAM disk) or
+  . 256 KB Memory board (RAM disk) or
+  . IEC/IEEE bus interface
+- 16 KB ROM comprising:
+  . 4 KB Monitor (with built in debugger)
+  . 8 KB terminal software
+  . 4 KB character generator
+- SASI interface (for hard disk)
+- connection for external floppy disk drives
+- connection for 12" additional monitor (so called slave monitor)
+- two graphics presentations:
+  . medium resolution (256 x 252 pixels - 4 grey shades)
+  . high resolution (512 x 252 pixels)
+- professional keyboard, including:
+  . alphanumeric pad (59 keys)
+  . function pad (15 keys)
+  . numeric pad (19 keys)
+- data communication interface (75 - 19200 baud)
+- large character set - each key freely programmable
+Built up on two printed circuits, one being the 'computer' and the other the
+'terminal', and integrated with the built in monitor and disk drives, the
+P2000C comes as a complete system but allows additional units to be connected.
+Peripheral devices that may be added include:
+- printer
+- external monitor
+- V24 communication device (modem)
+- hard disk via SASI
+- plotter I
+
+-3-
+
+Choice of Three Models
+Three models of the P2000C are available, ensuring that every customer can find
+a system that is adequate for his present needs. The important characteristics
+of the three models are given below.
+P2010 2 x Z80A - 4 MHz
+  64 KB RAM user memory (plus 256 KB RAM disk - optional)
+  32 KB RAM video memory
+  2 x 160 KB floppy drives
+  1 extension slot (suitable for Memory Extension or
+  IEC/IEEE interface)
+  CP/M operating system
+  This model will suit users with modest disk capacity requirements.
+P2012 2 x Z80A - 4 MHz
+  64 KB RAM user memory
+  (plus optional 256 KB RAM disk Memory Extension board or
+  128, 256 or 512 KB RAM disk 8088 C0-POWER board)
+  32 KB RAM video memory
+  2 x 640 KB floppy drives
+  1 extension slot (suitable for Memory Extension, 8088 C0-POWER or
+  IEC/IEEE interface)
+  CP/M operating system
+  This model offers a bigger floppy storage capacity.
+  It can run CP/M or p-System programs although p-System does not
+  support 8088 C0-POWER board as RAM disk.
+P2009 2 x Z80A - 4 MHz
+  64 KB RAM user memory (plus 256 KB RAM disk - optional)
+  32 KB RAM video memory
+  1 x 640 KB floppy drive
+  1 extension slot (suitable for Memory Extension, 8088 C0-POWER or
+  IEC/IEEE interface)
+  CP/M operating system
+  This model can run CP/M or p-System programs.
+  A 10 MByte hard disk can be built-in for applications with larger
+  storage capacity requirements.
+For industrial and scientific measurements, control and testing; it is possible
+to fit the IEC/IEEE bus interface to all models. This will occupy the extension
+slot and preclude the use of the Memory Extension or 8088 C0-POWER board.
+
+-4-
+
+System Software
+The popular CP/M 2.2 operating system, as supplied with the basic machine,
+includes a variety of CP/M standard programming and specially designed P2000C
+operating utilities. If the 8088 CO-POWER Board is fitted the MS-DOS version
+2.11 operating system can also be used.
+This is described in more detail further on.
+- CONFIG. Designed for easy and flexible system configuration.
+For more demanding applications, the software can be custom
+configured by defining new keyboard, disk, printer and screen
+tables.
+Printer and Communications interface can be set to support
+transmission speeds from 75 to 19200 baud.
+- UTIL.# This program is used to format floppy and hard disks and
+to copy disks. Disk formats from other P2000 computers are also
+copyable to enable data transfer.
+- BACKUP.# Used to backup and restore hard disks on 5k" floppies.
+- other programs available run with CP/M to support MS-DOS
+- PIP and STAT. CP/M standard utilities for file and disk organ-
+isation.
+- LOAD, SYSGEN, ED, ASM, XSUB, SUBMIT, DUMP, DDT. CP/M standard
+programming utilities.
+# = CP/M system only
+User memory layout: 1 KB BIOS
+4 KB CP/M BDOS
+59 KB TPA
+A wide range of software is available for the CP/M operating system. This
+includes application program like:
+- spreadsheet packages
+- database managers
+- word processors
+- business graphics
+- languages
+- utilities and tools
+- financial packages
+- custom designed programs
+- data communications packages
+  - asynchronous e.g., TTY or VT-l00
+  - synchronous e.g., 2780/3780 or 3270 series
+-5-
+
+Documentation
+For technical information on the CP/M Operating System the:
+CP/M Reference Manual (order number - 5103 993 ll92l) is available.
+Even more information on the hardware itself can be obtained from the:
+System Reference and Service Manual (P2599).
+This manual includes more on the BIOS, peripherals, circuit diagrams and des-
+criptions and the spare part catalogue. It also describes the maintenance
+program and contains the Maintenance Disk.
+The PZOOOC is delivered complete with the CP/M User's Guide, which explains the
+essentials of using CP/M, and the Hardware Operator Manual.
+An MS-DOS User's Guide will also be available.
+
+
+-6-
+
+System Architecture
+The P2000C consists of the following main units:
+- power supply unit and distribution board
+- mainboard
+- terminalboard
+- 9" monitor
+- one or two 5%" flexible disk drives (160 KB or 640 KB)
+- keyboard ‘
+With the exception of the keyboard, all units are contained within the main
+casing.
+The system architecture is shown in figure 1.
+
+
+Figure 1. P2000C - System Architecture
+
+-7-
+
+Mainboard
+The P2000C Mainboard, which can be used with an external terminal in lieu of
+the built in terminalboard, is built around the Z80A processor. It operates at
+4MHz when working with RAM and is switched to 2 MHz when working with
+additional ROM.
+For enhanced data transfer rates, an Intel 8257 Direct Memory Access controller
+is used.
+Initial program loading is carried out from the IPL ROM, mounted on the
+mainboard, which in turn reads the operating system from the designated 'A'
+drive. In the event of the system being unable to read in the operating system,
+a built in DEBUGGER is available which allows short checks to be performed on
+memory, ports, floppy disk, hard disk, video, keyboard and printer.
+The random access memory consists of a 64 KB array of HM 4864-2 memories.
+Memory management is used to control switching between internal ROM and ex-
+ternal RAM and for switching over between internal RAM and the IPL ROM. For
+external RAM access, the memory management is handled by external hardware.
+In addition to the interface to the terminalboard, the mainboard also handles
+the interfaces to a printer, a communications device, external floppy drives
+(two additional drives may be connected) and the SASI interface to a maximum of
+7 devices (8 bit parallel bus).
+Two 4 channel Z80A CTCs, (Z8430A), are used as baudrate generators and as in-
+terrupt controllers for the system timer and non-Z8O devices.
+The PZOOOC has three fully duplexed serial channels.
+Terminal and communication interfaces are controlled by a Z80A SIO (Z8440).
+The printer interface is controlled by an Intel 825lA USART.
+A free slot is available which allows the addition of either the 8088 CO-POWER
+board, the IEC/IEEE bus interface or the memory extension board.
+An important use of the memory extension and the 8088 CO-POWER board in the
+CP/M environment is as RAM floppy, giving fast access to a mass storage medium.
+
+-8-
+
+Terminalboard
+The P2000C Terminalboard, ·which can be used as an external terminal, is built
+around the second Z80A processor.
+It carries out the following functions:
+- control of the monochrome monitor
+- scanning of the keyboard
+- control of the beeper
+Terminalboard memory consists of 32 KB of RAM (in two banks of 16 KB) and 8 KB
+ROM.
+RAM Bank0 is used as video refresh memory, and is 2, 4 or 8 KB (selectable).
+The remaining RAM is used by the CPU (buffer, downloaded IPL, stack etc.).
+RAM Bankl is used either as attribute memory or as graphic memory.
+P2000C image representation may be:
+- alphanumeric with 5 attributes
+- medium resolution graphics (4 grey shades) with alphanumeric
+representation
+- high resolution graphics with alphanumeric representation
+Attributes (normal alphanumeric representation only) are:
+- underlined
+- blinking
+- inverted
+- bright 0
+- bright 1 .. bright 0 and bright 1 are decoded
+to give 4 brightness levels
+Screen size may be:
+- 24 lines by 80 characters (CP/M) or
+- 25 lines by 80 characters (MS-DOS)
+Note: 25 line MS-DOS requires version 1.3 or later of the terminal ROM.
+The character generator ROM contains dot information for 256 characters,
+including all ASCII characters and mosaic graphics.
+If RAM Bankl is used as graphic memory, there are two possible methods:
+- HIGH resolution graphics with 512 x 252 dots
+- MEDIUM resolution graphics with 256 x 252 dots
+The V24/Internal interface (the interface with the Mainboard) is controlled by
+a USART 8251A. The internal link is at TTL level; the V24 connnection (when the
+Terminalboard is used as a stand-alone terminal) is buffered by open collector
+drivers.
+
+-9-
+
+The CRT Controller is an MC 6845, which generates all the signals required for
+controlling a monitor. The video refresh addresses given by the CRTC are only
+used to control the alphanumeric characters and attributes.
+The lightpen circuit of the CRTC is used in the P2000C for interrogating the
+keyboard scan logic, reducing the number of connections between the keyboard
+and the terminalboard to six.
+The Terminalboard also includes a ZSOA CTC, (Z843OA), used for USART CLOCK,
+transmit and receive functions and keyboard handling.
+-lO-
+
+Keyboard
+The keyboard has been specially designed for the PZOOOC, with particular
+attention having been paid to the ergonomic requirements of the professional
+user. It is a low profile unit with sculptured keys on the typewriter section
+and has separate function and numeric pads. An LED is incorporated in the
+'shift lock' key to indicate that the keyboard is in the shift lock mode.
+The keyboard is separate from the main unit and connected by a coiled cable. It
+contains only the keyswitch matrix and a few TTL packages.
+For transportation the keyboard fits inside the facia of the main unit and is
+secured by the carrying strap. The keyboard connecting cable is stowed, with
+the mains cable, in a compartment at the back of the unit.
+Although the keyboard is obtainable in various language versions, the
+electronics of each is identical and only the key-tops differ. The adaption of
+the basic keyboard to meet national requirements is carried out by the use of
+the Keyboard and Video tables. This is detailed in the CP/M Configuration
+Program (part of the System Software).
+Figure 2 shows a typical (United Kingdom) keyboard layout.
+
+Figure 2 PZOOOC Keyboard - United Kingdom Version
+
+-11-
+
+Monitor
+The PZOOOC incorporates a 9" monochrome (green) monitor, with an antiglare
+screen. The monitor produces a distortion free display from edge to edge that
+is 'easy on the eyes'. The brightness is adjustable from the front panel to
+suit the display to ambient lighting conditions.
+An external l2" monitor can be connected.
+
+Disk Drives
+The Flexible Disk Drives fitted to the PZOOOC are 5 1/4" slim line drives.
+The two versions that will be available are:
+- 16OK Single Sided, single track density (48 tpi)
+- 64OK Double Sided, double track density (96 tpi)
+Two additional (external) drives can be connected.
+
+-12-
+
+IEC/IEEE Bus Interface P2091
+The P2091 IEC/IEEE bus interface represents a version of the Standard Digital
+Interface for Programmable Instrumentation according to the IEEE Std 488-1975,
+and deals with the interconnection of programmable electronic measuring devices
+under control of the PZOOOC.
+The main properties of the P2000C IEC/IEEE bus interface are as follows:
+  Completely complies with IEEE 488 and IEC 625 standards.
+  Connection of up to 15 devices (in addition to the P2000C).
+  A maximum overall distance between PZOOOC and the furthest device of 20m.
+  Byte serial, bit parallel, data transfer.
+  Multiplexing of addresses, commands and data.
+  8 data bus lines.
+  8 control bus lines - (3 for bus transfer, 5 for bus management).
+  Standard codes for addresses and commands (ASCII or ISO 7 bit code).
+  Transparent data transfer.
+  Asynchronous communication (handshake).
+The IEC/IEEE bus interface allows the P2000C to be incorporated into a system
+in the following roles:
+- system controller
+- controller
+- non-controlling device
+- analyser/bus controller
+Important features of the IEC/IEEE bus interface are:
+- able to pass/receive control
+- supports serial polling
+- supports interrupts on IFC, EOI and SRQ
+- supports secondary addressing
+- incorporates programmable terminator handling
+Physical aspects include:
+- individually programmable bus lines
+- hardware interrupt
+
+-13-
+
+IECBASIC
+The IEC/IEEE bus interface is supplied with an extended IEC/IEEE MBASIC. This
+makes it easy for the industrial or scientific user to write the programs he
+needs without having to master Assembly programming or the technical details of
+IEC/IEEE hardware.
+The features of IEC/IEEE extended BASIC are:
+- The IEC/IEEE bus statements are fully integrated
+  into the Standard Microsoft BASIC Interpreter, so
+  low level language need not be used at all.
+- Easy-to-program macro statements are used.
+- The P2000C IEC/IEEE software distinguishes between
+  system controller, controller and non-controller.
+- IEC/IEEE addressing is both primary and secondary.
+- Polling and service request facilities work with
+  P2OOOC as controller or device.
+- Specific instrumentation functions are available
+  like CLEAR, TRIGGER, LOCAL LOCKOUT, LOCAL, REMOTE -
+  all either general or addressed.
+- Transfer control.
+- Variable input/output formats
+  (block/record separators).
+- BASIC interrupt subroutines
+  (on IFC, SRQ, EOI GOSUB).
+
+-14-
+
+Memory Extension P2092 (for P201O and P2O12)
+The P2092 Memory Extension option provides the user with an additional 256 KB
+of RAM, which may be'used as RAM Floppy (or cache-memory).
+The board occupies the extension socket on the mainboard.
+In the Cache Mode, the user has 15 additional banks of memory available, each
+covering 16 KB. Each bank can be individually addressed.
+The Cache Memory can be visualised in the following way:
+  For each of the 15 memory banks, the lower addresses (from OOOOH to 3FFFH)
+  are common, allowing data to be effectively 'carried over' to different
+  programs. This area is used as the directory area when the RAM Floppy is
+  implemented.
+
+  For each of the 15 memory banks, the upper addresses (from COOOH to FFFFH)
+  are part of the main memory, allowing data to be 'carried over' to and
+  from main memory routines.
+
+  For each of the 15 memory banks, the addresses from 8000H to BFFFH do not
+  exist and any attempted access to these addresses while in the Cache Mode
+  will give undefined results.
+
+  For each of the 15 memory blocks the 16 KB between 4000H and 7FFFH are
+  available to the user. These areas are used to store files when the RAM
+  Floppy is implemented.
+
+-15-
+
+16 Bit CO-POWER Board P2093
+Conversion to a mixed 8 and 16 bit computer is possible with the incorporation
+of the 8088 CO-POWER Board and the associated software. The enhanced machine is
+capable of running the MS-DOS operating system on an 8088 processor simul-
+taneously with the CP/M-8O operating system on the original Z80 processor.
+Machine resources are shared and CP/M use is restricted (see 8088 CO-POWER
+description).
+The 8088 CO-POWER Board contains memory that can be accessed as main memory by
+the MS-DOS operating system or as RAM disk by the CP/M (in the same way as the
+Memory Extension Board P2092)·
+The MS-DOS implementation has been made as compatible as possible with the IBM
+PC-DOS 2, although it has not been possible to make video access compatible for
+programs that bypass the operating system and make direct use of the video
+memory in the IBM PC.
+The 8088 CO-POWER Board is fitted to the extension slot of the P2000C mainboard.
+It contains an 8088 processor and has facilities for adding an optional 8087
+maths processor.
+RAM memory is dependent on the number and type of RAM chips fitted. Using 64 KB
+or 256 KB chips, the total available RAM may be:
+  - 128 KB (2 banks of 64 KB chips)
+  - 256 KB or 512 KB (1 or 2 banks of 256 KB chips)
+
+TESTING
+A test program is supplied with the 8088 CO-POWER Board (TEST88) which is used
+to exercise the memory and 8088 CPU to confirm that the board is operating
+correctly. This program is run from the CP/M environment.
+LOADING MS-DOS
+The 8088 CO-POWER Board is run under the MS-DOS version 2.11 Operating System.
+This is loaded via the CP/M program MSBOOT. This program performs some hardware
+tests and determines the amount of available memory before continuing with
+loading the operating system. If the 8088 CO-POWER Board is missing or defect-
+ive control is returned to the CP/M system.
+DISK SUPPORT
+The MS-DOS can access two internal 96 tpi double sided floppy drives and an
+attached hard disk. Access to internal 48 tpi single sided floppy drives or any
+external drives will not be possible. This precludes the use of the 8088 with
+the P2010.
+
+-16-
+
+COMMUNICATIONS SUPPORT
+Although it is not possible for an MS-DOS application program to access the
+communication ports directly through 8088 IO, communication applications can be
+executed via Z80 routines or via the 8088 BIOS through software interrupts.
+CP/M SOFTWARE UTILITIES FOR USE WITH THE 8088
+
+TEST88 A program to test the functions of the 8088 C0-POWER Board
+MSBOOT A program to load an application into the CP/M TPA if required
+  and then to boot the MS-DOS operating system into the 8088 and
+  transfer control to the MS-DOS.
+MSUTIL Functions required when using MS-DOS:
+- format floppy to MS-DOS format.
+- copy floppy diskettes
+- backup of MS-DOS hard disk area
+- configuration of hard disk sharing between CP/M and MS-DOS.
+
+CONTENT OF PRODUCT RELEASE FOR 8088 CO-POWER BOARD
+- 8088 CO-POWER pcb with 128, 256 or 512 KBytes RAM
+- Terminal ROM BIOS chip to provide 25 line display
+  (already fitted in later machines)
+- CP/M-80 (640 KByte format) diskette with files like:
+  - TEST88.COM
+  - MSBOOT.COM required for MS-DOS
+  - MSUTIL.COM required for MS-DOS
+  - MSUTIL.MSG required for MS-DOS
+  - MSKEY.TAB required for MS-DOS
+  - CONFIG.DAT required for MS-DOS
+  - CBIOS61.COM to support RAM disk
+  - CBIOS62.COM to support RAM disk
+  - CBIOS63.COM to support RAM disk
+  - INSTCPM.SUB install for CP/M (RAM DISK)
+  - INSTMS.SUB install for MS-DOS
+- MS-DOS (800 KByte format) diskette containing:
+  - system files
+  - standard utilities
+- DOCUMENTATION including:
+  - P2000C specific introduction
+  - MS-DOS User Guide
+
+-17-
+
+TECHNICAL DATA - SUMMARY
+General
+Dimensions: 540 x 360 x 210 mm
+Weight: 15 kg (approx)
+Power Consumption: 95 W (max)
+Mains Voltage: 90-130 V, 47-66 Hz or
+180-160 V, 47-66 Hz
+Built in
+Interfaces: SASI (for hard disk)
+External floppy disks
+Serial Printer (V24)
+Data Communications (V24)
+Slave Monitor
+Extension slot for optional devices (see below)
+Optional accessory: Protective cover; can be used as a dust cover for
+the installed machine or as a protective cover
+during transportation.
+Mainboard (CPU)
+Microprocessor: Z80A, 4MHz
+User Memory: 64 KB RAM
+MFD Controller: for up to 4 floppy drives (5%")
+SASI Controller: for up to 7 mass storage devices (e.g., hard disk)
+SI0 Controller: bidirectional serial (V24)
+synchronous and asynchronous communication,
+synchronous protocols at up to 60 Kbit/sec
+DMA Controller
+System Timer: 1 free timer for user program
+1 Extension Slot: for connection of additional boards e.g.,
+IEC/IEEE Bus Interface
+256 KB Memory Extension Board
+8088 C0-POWER Board with 128, 256 or 512 KB memory
+
+-18-
+
+Terminalboard
+Microprocessor: Z80A, 4MHz
+Video Memory: · 32 KB dynamic RAM
+Character Generator: 256 characters
+Video Modes: 1. Alpha:
+24 or 25 lines and 80 columns
+character attributes are:
+underline, inverse, blink & 4 intensity levels.
+2. Graphic:
+512 x 252 pixels (1 intensity level)
+256 x 252 pixels (4 intensity levels)
+Keyboard Controller
+Beeper
+
+Monitor
+Built In
+Monochrome CRT: Green phosphor P31
+Size: 9" diagonal
+150 x 120 mm used screen area
+Non-glare screen
+Character size: greater than 2.6 mm
+Scan: 50 frames per second
+Optional
+Monochrome CRT: 12"
+
+Keyboard
+Low profile ergonomic keyboard:
+Various language versions available
+Non-glare keytops
+3 keyboard sections:
+- alphanumeric: 59 sculptured keys
+- function pad: 15 stepped keys
+- numeric pad: 19 stepped keys
+
+-19-
+
+Floppy Disk Drives
+Built in 5 1/4" drives:      CP/M     CP/M     MS-
+                           p-System p-System   DOS
+Recording method:            MFM      MFM      MFM
+Used surfaces:                1        2        2
+Tracks per side:              40       80       80
+Sectors per track:            16       16       10
+Bytes per sector:            256      256      512
+Storage capacity:           160 KB   640 KB   800 KB
+
+P2091 - IEC/IEEE Bus Interface
+Max devices:           15 plus P2000C
+Max distance:          20 metres
+Data transfer:         Byte serial (dependent on software)
+Address/command codes: Standard ASCII or IS0 7 bit
+Baudrates:             May differ in devices
+
+Application: Ideal for simple instrumentation systems at medium data rates and
+over short distances.
+
+The IEC/IEEE bus interface allows the P2000C to be incorporated into a system
+in the following roles:
+  - system controller
+  - controller
+  - non-contro1ling device
+  - analyser/bus controller
+
+P2092 - Memory Extension
+RAM: 4 banks of 8 dynamic RAMs (HM 4864-2 - 64 Kbit)
+
+P2093 - 8088 C0-POWER Board
+Microprocessor:  8088 5 MHz
+User Memory:     128, 256 or 512 KBytes
+Maths processor: 8087 (optional)
+I/O Control:     Via Z80A on Mainboard
+
+The 8088 C0-POWER Board can also be used as memory extension for the CP/M in
+the role of RAM floppy.
+
+-20-
+
+
+
